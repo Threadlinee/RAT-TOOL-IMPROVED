@@ -1,0 +1,10 @@
+opencv-python
+psutil
+pynput
+requests
+pywin32
+GPUtil
+cryptography
+pyscreenshot
+wmi
+pyinstaller
