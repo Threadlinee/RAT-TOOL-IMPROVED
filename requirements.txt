@@ -8,3 +8,6 @@ cryptography
 pyscreenshot
 wmi
 pyinstaller
+pyaudio
+numpy
+scipy
