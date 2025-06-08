@@ -1,44 +1,8 @@
 [+] Added to startup
 [+] Connected to C2 server
-[+] Command: decrypt C:\Users\diona\Desktop\Social-Engineering
-'decrypt' is not recognized as an internal or external command,
-operable program or batch file.
 [+] Webcam snapshot taken
-[-] Command failed: file_read C:\Users\diona\Desktop\Social-Engineering
-Error: [Errno 13] Permission denied: 'C:\\Users\\diona\\Desktop\\Social-Engineering'
-[-] Command failed: file_read C:\Users\diona\Desktop\Social-Engineering
-Error: [Errno 13] Permission denied: 'C:\\Users\\diona\\Desktop\\Social-Engineering'
-[+] Command: file_read
-'file_read' is not recognized as an internal or external command,
-operable program or batch file.
-[+] Command: file_read
-'file_read' is not recognized as an internal or external command,
-operable program or batch file.
-[-] Command failed: file_read C:\Users\diona\Desktop\Social-Engineering
-Error: [Errno 13] Permission denied: 'C:\\Users\\diona\\Desktop\\Social-Engineering'
-[+] Listed files in C:\Users\diona\Desktop\Social-Engineering
-[+] Downloaded 15 files
 [+] Screenshot taken
-[+] Keylogger started
-[+] Keylogger stopped
-[+] Keylogger started
-[+] Keylogger stopped
-[+] Command: cmd
-Microsoft Windows [Version 10.0.19045.5917]
-(c) Microsoft Corporation. All rights reserved.
-
-C:\Users\diona\Desktop\RAT-TOOL-IMPROVED\dist>
-[+] Command: cmd python --version
-Microsoft Windows [Version 10.0.19045.5917]
-(c) Microsoft Corporation. All rights reserved.
-
-C:\Users\diona\Desktop\RAT-TOOL-IMPROVED\dist>
-[+] Command: cmd whoami
-Microsoft Windows [Version 10.0.19045.5917]
-(c) Microsoft Corporation. All rights reserved.
-
-C:\Users\diona\Desktop\RAT-TOOL-IMPROVED\dist>
-[+] Privilege escalation attempted
-[+] Downloaded 15 files
 [-] Command error: [WinError 10054] An existing connection was forcibly closed by the remote host
 [-] Connection error: [WinError 10061] No connection could be made because the target machine actively refused it
+[+] Added to startup
+[+] Connected to C2 server
