@@ -1,8 +1,0 @@
-[+] Added to startup
-[+] Connected to C2 server
-[+] Webcam snapshot taken
-[+] Screenshot taken
-[-] Command error: [WinError 10054] An existing connection was forcibly closed by the remote host
-[-] Connection error: [WinError 10061] No connection could be made because the target machine actively refused it
-[+] Added to startup
-[+] Connected to C2 server

