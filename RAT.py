@@ -883,7 +883,7 @@ def start_listener():
                     conn.send(cmd.encode())
                     break
                 conn.send(cmd.encode())
-                response_data = conn.recv(1048576).decode()  # Increased buffer for larger data
+                response_data = conn.recv(1048576).decode()
                 try:
                     response = json.loads(response_data)
                     if response["type"] == "success":
